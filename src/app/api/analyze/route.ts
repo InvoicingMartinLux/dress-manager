@@ -41,7 +41,9 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("analyze failed:", err);
     return NextResponse.json(
-      { error: "Analysis failed. You can still fill in the details manually." },
+      {
+        error: `Analysis failed: ${(err as Error).message}. You can still fill in the details manually.`,
+      },
       { status: 502 }
     );
   }
