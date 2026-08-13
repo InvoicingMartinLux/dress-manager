@@ -7,6 +7,9 @@ import { getSession } from "@/lib/auth";
 
 export const maxDuration = 60;
 
+/** Vercel caps a serverless function's request body at 4.5 MB. */
+const MAX_UPLOAD_SIZE = 4.5 * 1024 * 1024;
+
 const detailsSchema = z.object({
   name: z.string().min(1).max(200),
   category: z.enum(CATEGORIES),
@@ -55,27 +58,61 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid item details." }, { status: 400 });
   }
 
-  const ext = (file.type.split("/")[1] ?? "jpg").replace(/[^a-z0-9]/gi, "");
-  const blob = await put(
-    `garments/${session.userId}/${crypto.randomUUID()}.${ext}`,
-    file,
-    { access: "public" }
-  );
+  if (file.size > MAX_UPLOAD_SIZE) {
+    return NextResponse.json(
+      {
+        error:
+          "That photo is too large to upload (the hosting limit is 4.5 MB per request). Try a smaller photo.",
+      },
+      { status: 413 }
+    );
+  }
 
-  const [item] = await db()
-    .insert(garments)
-    .values({
-      userId: session.userId,
-      name: details.name,
-      category: details.category,
-      subcategory: details.subcategory || null,
-      colors: details.colors,
-      pattern: details.pattern,
-      formality: details.formality,
-      seasons: details.seasons,
-      imageUrl: blob.url,
-    })
-    .returning();
+  // Upload the photo first — a failure here must not leave an orphaned row.
+  let imageUrl: string;
+  try {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      throw new Error(
+        "BLOB_READ_WRITE_TOKEN is not set — connect a Blob store to the project and redeploy"
+      );
+    }
+    const ext = (file.type.split("/")[1] ?? "jpg").replace(/[^a-z0-9]/gi, "");
+    const blob = await put(
+      `garments/${session.userId}/${crypto.randomUUID()}.${ext}`,
+      file,
+      { access: "public" }
+    );
+    imageUrl = blob.url;
+  } catch (err) {
+    console.error("blob upload failed:", err);
+    return NextResponse.json(
+      { error: `Photo upload failed: ${(err as Error).message}` },
+      { status: 502 }
+    );
+  }
 
-  return NextResponse.json(item, { status: 201 });
+  try {
+    const [item] = await db()
+      .insert(garments)
+      .values({
+        userId: session.userId,
+        name: details.name,
+        category: details.category,
+        subcategory: details.subcategory || null,
+        colors: details.colors,
+        pattern: details.pattern,
+        formality: details.formality,
+        seasons: details.seasons,
+        imageUrl,
+      })
+      .returning();
+
+    return NextResponse.json(item, { status: 201 });
+  } catch (err) {
+    console.error("garment insert failed:", err);
+    return NextResponse.json(
+      { error: `Saving to the database failed: ${(err as Error).message}` },
+      { status: 500 }
+    );
+  }
 }

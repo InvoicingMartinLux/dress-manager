@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CATEGORIES, PATTERNS, SEASONS } from "@/lib/db/schema";
+import { downscaleImage } from "@/lib/image";
 
 type Details = {
   name: string;
@@ -35,15 +36,22 @@ export default function NewGarmentPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onFileChange(f: File | null) {
-    setFile(f);
+  async function onFileChange(chosen: File | null) {
     setAnalyzed(false);
     setError(null);
     if (preview) URL.revokeObjectURL(preview);
-    setPreview(f ? URL.createObjectURL(f) : null);
-    if (!f) return;
+    if (!chosen) {
+      setFile(null);
+      setPreview(null);
+      return;
+    }
 
     setAnalyzing(true);
+    // Shrink phone photos so they fit the upload limit before anything else.
+    const f = await downscaleImage(chosen);
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+
     const form = new FormData();
     form.append("image", f);
     const res = await fetch("/api/analyze", { method: "POST", body: form });
@@ -80,14 +88,26 @@ export default function NewGarmentPage() {
       "details",
       JSON.stringify({
         ...details,
-        colors: details.colors.filter((c) => c.name.trim() !== ""),
+        // Keep every color that has a usable hex — matching scores on the hex,
+        // so an unnamed color is still worth storing.
+        colors: details.colors
+          .filter((c) => /^#[0-9a-fA-F]{6}$/.test(c.hex))
+          .map((c) => ({ hex: c.hex, name: c.name.trim() || "this color" })),
       })
     );
-    const res = await fetch("/api/garments", { method: "POST", body: form });
+
+    let res: Response;
+    try {
+      res = await fetch("/api/garments", { method: "POST", body: form });
+    } catch {
+      setSaving(false);
+      setError("Could not reach the server. Check your connection and retry.");
+      return;
+    }
     setSaving(false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Saving failed.");
+      setError(data.error ?? `Saving failed (HTTP ${res.status}).`);
       return;
     }
     const item = await res.json();
