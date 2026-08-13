@@ -3,6 +3,7 @@ import Link from "next/link";
 import "./globals.css";
 import { getSession } from "@/lib/auth";
 import LogoutButton from "@/components/LogoutButton";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "Dress Manager",
@@ -55,6 +56,7 @@ export default async function RootLayout({
           </div>
         </header>
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+        <Analytics />
       </body>
     </html>
   );
