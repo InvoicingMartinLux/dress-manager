@@ -172,13 +172,21 @@ export default function DatenschutzPage() {
           reduzierte Fassung übertragen wird.
         </p>
         <p>
-          <strong className="text-ink">Hinweis zur Erreichbarkeit der Bilddateien:</strong>{" "}
-          Die Fotos werden bei unserem Speicherdienstleister unter einer
-          zufällig erzeugten, nicht öffentlich verzeichneten Adresse abgelegt.
-          Diese Adresse ist nicht erratbar und wird nirgends veröffentlicht —
-          wer sie jedoch kennt, kann die Datei ohne Anmeldung abrufen. Bitte
-          laden Sie daher keine Fotos hoch, auf denen Personen erkennbar sind
-          oder die weitere personenbezogene Informationen enthalten.
+          <strong className="text-ink">Zugriffsschutz der Bilddateien:</strong>{" "}
+          Fotos werden beim Speicherdienstleister als private Objekte ohne
+          öffentlich abrufbare Adresse abgelegt. Sie werden ausschließlich über
+          eine geschützte Schnittstelle unserer Anwendung ausgeliefert, die bei
+          jedem Abruf prüft, ob Sie angemeldet sind und ob das Bild zu Ihrem
+          Konto gehört. Zwischenspeicher Dritter dürfen die Bilder nicht
+          vorhalten.
+        </p>
+        <p>
+          Vor der Umstellung auf diese private Speicherung hochgeladene Fotos
+          können noch unter einer zufällig erzeugten, nicht veröffentlichten
+          Adresse liegen, die ohne Anmeldung abrufbar ist. Sie können solche
+          Einträge löschen und erneut anlegen, um sie in die geschützte
+          Speicherung zu überführen. Unabhängig davon empfehlen wir, keine
+          Fotos hochzuladen, auf denen Personen erkennbar sind.
         </p>
       </Section>
 

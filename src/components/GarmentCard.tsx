@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Garment } from "@/lib/db/schema";
+import { imageRoute } from "@/lib/blob";
 
 export default function GarmentCard({
   garment,
@@ -15,10 +16,17 @@ export default function GarmentCard({
       className="card group block overflow-hidden transition-transform duration-200 hover:scale-[1.03] hover:shadow-[var(--shadow-lift)]"
     >
       <div className="relative aspect-square bg-canvas">
+        {/*
+          unoptimized: the Next image optimizer fetches the source server-side
+          and caches by URL alone, which would let one account's photo be
+          served from cache to another. Going direct keeps every request on
+          the owner-checked route.
+        */}
         <Image
-          src={garment.imageUrl}
+          src={imageRoute(garment.id, "thumb")}
           alt={garment.name}
           fill
+          unoptimized
           sizes="(max-width: 768px) 50vw, 25vw"
           className="object-cover"
         />

@@ -85,6 +85,16 @@ export default function NewGarmentPage() {
     setError(null);
     const form = new FormData();
     form.append("image", file);
+
+    // A small companion image for the wardrobe grid. Photos are served
+    // through an authenticated route, which cannot use Next's image
+    // optimizer, so the browser would otherwise download full-size files for
+    // every tile.
+    const thumbnail = await downscaleImage(file, 480, 0.8);
+    if (thumbnail.size < file.size) {
+      form.append("thumbnail", thumbnail);
+    }
+
     form.append(
       "details",
       JSON.stringify({
