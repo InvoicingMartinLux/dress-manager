@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { put, del } from "@vercel/blob";
 import Anthropic from "@anthropic-ai/sdk";
 import { db } from "@/lib/db";
@@ -122,37 +123,66 @@ export default async function SetupPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="text-2xl font-bold">Setup check</h1>
-      <p className="mt-1 text-sm text-stone-600">
+      <p className="label-caps text-ink-faint">Diagnostics</p>
+      <h1 className="mt-1 text-[2.25rem] font-bold leading-tight tracking-tight">
+        Setup check
+      </h1>
+      <p className="mt-2 text-ink-muted">
         Live test of every service the app depends on.
       </p>
 
       <div
-        className={`mt-6 rounded-lg border p-4 ${failures.length === 0 ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}`}
+        className="card mt-6 flex items-center gap-3 p-4"
+        style={{
+          borderColor: failures.length === 0 ? "var(--success)" : "var(--danger)",
+        }}
       >
-        {failures.length === 0
-          ? "✅ Everything is configured correctly."
-          : `❌ ${failures.length} problem(s) found — see the details below.`}
+        {failures.length === 0 ? (
+          <CheckCircle2
+            className="h-5 w-5 shrink-0 text-success"
+            aria-hidden="true"
+          />
+        ) : (
+          <XCircle
+            className="h-5 w-5 shrink-0 text-danger"
+            aria-hidden="true"
+          />
+        )}
+        <span className="font-medium">
+          {failures.length === 0
+            ? "Everything is configured correctly."
+            : `${failures.length} problem${failures.length === 1 ? "" : "s"} found — details below.`}
+        </span>
       </div>
 
-      <ul className="mt-6 space-y-3">
+      <ul className="mt-5 space-y-3">
         {checks.map((c) => (
-          <li
-            key={c.name}
-            className="rounded-lg border border-stone-200 bg-white p-4"
-          >
-            <p className="font-medium">
-              {c.ok ? "✅" : "❌"} {c.name}
-            </p>
-            <p className="mt-1 break-words text-sm text-stone-600">{c.detail}</p>
+          <li key={c.name} className="card flex gap-3 p-4">
+            {c.ok ? (
+              <CheckCircle2
+                className="mt-0.5 h-5 w-5 shrink-0 text-success"
+                aria-hidden="true"
+              />
+            ) : (
+              <XCircle
+                className="mt-0.5 h-5 w-5 shrink-0 text-danger"
+                aria-hidden="true"
+              />
+            )}
+            <div className="min-w-0">
+              <p className="font-medium">{c.name}</p>
+              <p className="mt-1 break-words text-sm text-ink-muted">
+                {c.detail}
+              </p>
+            </div>
           </li>
         ))}
       </ul>
 
-      <p className="mt-6 text-xs text-stone-400">
+      <p className="mt-6 text-sm text-ink-faint">
         This page reports configuration status only — it never displays secret
-        values. Delete <code>src/app/setup/page.tsx</code> once everything works
-        if you&apos;d rather not have it public.
+        values. Delete <code className="font-mono">src/app/setup/page.tsx</code>{" "}
+        once everything works if you&apos;d rather not have it public.
       </p>
     </div>
   );

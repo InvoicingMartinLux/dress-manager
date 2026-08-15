@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import "./globals.css";
 import { getSession } from "@/lib/auth";
 import LogoutButton from "@/components/LogoutButton";
+import NavLink from "@/components/NavLink";
 import Logo from "@/components/Logo";
 
 export const metadata: Metadata = {
@@ -14,51 +16,67 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await getSession();
+
   return (
     <html lang="en">
-      <body className="min-h-screen bg-stone-50 text-stone-900 antialiased">
-        <header className="border-b border-stone-200 bg-white">
-          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-            <Link href="/" className="flex items-center gap-2.5">
-              <Logo className="h-8 w-8" />
-              <span className="text-base font-light uppercase tracking-[0.18em] text-[#1E2B3C]">
-                Dress Manager
-              </span>
-            </Link>
-            <nav className="flex items-center gap-4 text-sm">
-              {session ? (
-                <>
-                  <Link href="/wardrobe" className="hover:underline">
-                    Wardrobe
-                  </Link>
-                  <Link
-                    href="/wardrobe/new"
-                    className="rounded-md bg-stone-900 px-3 py-1.5 text-white hover:bg-stone-700"
-                  >
-                    + Add item
-                  </Link>
-                  <span className="hidden text-stone-500 sm:inline">
-                    {session.name}
-                  </span>
-                  <LogoutButton />
-                </>
-              ) : (
-                <>
-                  <Link href="/login" className="hover:underline">
-                    Sign in
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="rounded-md bg-stone-900 px-3 py-1.5 text-white hover:bg-stone-700"
-                  >
-                    Create account
-                  </Link>
-                </>
-              )}
-            </nav>
-          </div>
-        </header>
-        <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <body className="min-h-[100dvh] antialiased">
+        <div className="aurora-field" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </div>
+
+        <div className="relative z-10 flex min-h-[100dvh] flex-col">
+          <header className="sticky top-0 z-[100] border-b border-line bg-surface/85 backdrop-blur-xl">
+            <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-6 py-3">
+              <Link href="/" className="flex items-center gap-2.5">
+                <Logo className="h-8 w-8" />
+                <span className="label-caps text-[0.8125rem] tracking-[0.18em] text-ink">
+                  Dress Manager
+                </span>
+              </Link>
+
+              <nav className="flex items-center gap-5">
+                {session ? (
+                  <>
+                    <NavLink href="/wardrobe">Wardrobe</NavLink>
+                    <Link
+                      href="/wardrobe/new"
+                      className="btn btn-primary px-4 py-2 text-sm"
+                    >
+                      <Plus className="h-4 w-4" aria-hidden="true" />
+                      Add item
+                    </Link>
+                    <LogoutButton />
+                  </>
+                ) : (
+                  <>
+                    <NavLink href="/login">Sign in</NavLink>
+                    <Link
+                      href="/register"
+                      className="btn btn-primary px-4 py-2 text-sm"
+                    >
+                      Create account
+                    </Link>
+                  </>
+                )}
+              </nav>
+            </div>
+          </header>
+
+          <main className="mx-auto w-full max-w-[1280px] flex-1 px-6 py-[clamp(2rem,5vw,4rem)]">
+            {children}
+          </main>
+
+          <footer className="border-t border-line px-6 py-6">
+            <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-2 text-sm text-ink-faint">
+              <span>Dress Manager — manage your wardrobe, simplify your style.</span>
+              <Link href="/setup" className="hover:text-ink-muted">
+                Setup check
+              </Link>
+            </div>
+          </footer>
+        </div>
       </body>
     </html>
   );

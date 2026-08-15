@@ -1,4 +1,6 @@
-const NAVY = "#1E2B3C";
+// The cabinet linework inherits the surrounding text color so the mark works
+// on both the light and dark canvas; the garments keep the brand colors.
+const NAVY = "currentColor";
 const TAN = "#C0A98D";
 const CREAM = "#FAF8F4";
 
@@ -26,10 +28,10 @@ function Garment({ cx, fill }: { cx: number; fill: string }) {
       {/* opening down the front */}
       <path
         d={`M${cx} 47.5V72.5`}
-        stroke={fill === NAVY ? CREAM : NAVY}
+        stroke={fill === NAVY ? "var(--surface)" : NAVY}
         strokeWidth="1.6"
         strokeLinecap="round"
-        opacity={fill === NAVY ? 0.55 : 0.5}
+        opacity={fill === NAVY ? 0.7 : 0.5}
       />
     </g>
   );
@@ -53,7 +55,7 @@ export default function Logo({ className }: { className?: string }) {
         width="100"
         height="104"
         rx="9"
-        fill="#fff"
+        fill="var(--surface)"
         stroke={NAVY}
         strokeWidth="4.5"
       />
