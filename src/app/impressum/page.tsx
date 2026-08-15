@@ -5,42 +5,7 @@ export const metadata: Metadata = {
   description: "Anbieterkennzeichnung gemäß § 5 DDG.",
 };
 
-/**
- * ─────────────────────────────────────────────────────────────────────────
- *  FILL THIS IN. Every "«…»" value below is a placeholder.
- *
- *  Required by § 5 DDG: real name, a physical address (a P.O. box is not
- *  sufficient), and a means of fast electronic contact. Set optional fields
- *  to null and their section disappears.
- * ─────────────────────────────────────────────────────────────────────────
- */
-const IMPRESSUM = {
-  /** Private individual, or the company name including its legal form. */
-  name: "«Vor- und Nachname»",
-  /** Only for companies, e.g. "Vertreten durch: Max Mustermann". */
-  vertretenDurch: null as string | null,
-  street: "«Straße und Hausnummer»",
-  postalCode: "«PLZ»",
-  city: "«Ort»",
-  country: "Deutschland",
-
-  email: "«E-Mail-Adresse»",
-  /** Optional under § 5 DDG if another fast electronic channel exists. */
-  phone: null as string | null,
-
-  /** e.g. "Amtsgericht «Ort», HRB «Nummer»" — omit if not registered. */
-  registereintrag: null as string | null,
-  /** USt-IdNr. nach § 27a UStG — omit if not VAT registered. */
-  umsatzsteuerId: null as string | null,
-  /** Supervisory authority, if the activity requires authorisation. */
-  aufsichtsbehoerde: null as string | null,
-
-  /**
-   * § 18 Abs. 2 MStV — only required for journalistic-editorial content.
-   * Usually the same person and address as above.
-   */
-  inhaltlichVerantwortlich: null as string | null,
-} as const;
+import { CONTROLLER, addressLines } from "@/lib/legal";
 
 function Section({
   title,
@@ -59,19 +24,13 @@ function Section({
 
 export default function ImpressumPage() {
   const {
-    name,
-    vertretenDurch,
-    street,
-    postalCode,
-    city,
-    country,
     email,
     phone,
     registereintrag,
     umsatzsteuerId,
     aufsichtsbehoerde,
     inhaltlichVerantwortlich,
-  } = IMPRESSUM;
+  } = CONTROLLER;
 
   return (
     <div className="mx-auto max-w-[68ch]">
@@ -81,11 +40,7 @@ export default function ImpressumPage() {
       </h1>
 
       <Section title="Angaben gemäß § 5 DDG">
-        <p className="whitespace-pre-line">
-          {[name, vertretenDurch, street, `${postalCode} ${city}`, country]
-            .filter(Boolean)
-            .join("\n")}
-        </p>
+        <p className="whitespace-pre-line">{addressLines().join("\n")}</p>
       </Section>
 
       <Section title="Kontakt">

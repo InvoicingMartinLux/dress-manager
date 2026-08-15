@@ -75,6 +75,9 @@ export default async function RootLayout({
                 <Link href="/impressum" className="hover:text-ink-muted">
                   Impressum
                 </Link>
+                <Link href="/datenschutz" className="hover:text-ink-muted">
+                  Datenschutz
+                </Link>
                 <Link href="/setup" className="hover:text-ink-muted">
                   Setup check
                 </Link>
