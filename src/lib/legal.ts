@@ -1,27 +1,22 @@
 /**
- * ─────────────────────────────────────────────────────────────────────────
- *  FILL THIS IN. Every "«…»" value below is a placeholder.
+ * Controller details, shared by the Impressum and the Datenschutzerklärung so
+ * they are defined once. § 5 DDG requires a real name and a physical address
+ * — a P.O. box is not sufficient — plus a means of fast electronic contact.
  *
- *  Shared by the Impressum and the Datenschutzerklärung, so the controller's
- *  details are defined once. § 5 DDG requires a real name and a physical
- *  address — a P.O. box is not sufficient — plus a means of fast electronic
- *  contact.
- *
- *  Optional fields are null; each one omits its own section rather than
- *  rendering an empty row.
- * ─────────────────────────────────────────────────────────────────────────
+ * Optional fields are null; each one omits its own section rather than
+ * rendering an empty row.
  */
 export const CONTROLLER = {
   /** Private individual, or the company name including its legal form. */
-  name: "«Vor- und Nachname»",
+  name: "Martin Lux",
   /** Companies only, e.g. "Vertreten durch: Max Mustermann". */
   vertretenDurch: null as string | null,
-  street: "«Straße und Hausnummer»",
-  postalCode: "«PLZ»",
-  city: "«Ort»",
+  street: "Büchlweg 16",
+  postalCode: "82041",
+  city: "Oberhaching",
   country: "Deutschland",
 
-  email: "«E-Mail-Adresse»",
+  email: "martin.lux0102@gmail.com",
   /** Optional under § 5 DDG where another fast electronic channel exists. */
   phone: null as string | null,
 
