@@ -4,6 +4,7 @@ import { put, del } from "@vercel/blob";
 import Anthropic from "@anthropic-ai/sdk";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import PhotoMigrationPanel from "@/components/PhotoMigrationPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -179,10 +180,17 @@ export default async function SetupPage() {
         ))}
       </ul>
 
-      <p className="mt-6 text-sm text-ink-faint">
+      <h2 className="mt-12 text-[1.5rem] font-bold tracking-tight">
+        Maintenance
+      </h2>
+      <PhotoMigrationPanel />
+
+      <p className="mt-8 text-sm text-ink-faint">
         This page reports configuration status only — it never displays secret
-        values. Delete <code className="font-mono">src/app/setup/page.tsx</code>{" "}
-        once everything works if you&apos;d rather not have it public.
+        values, and the maintenance action above requires you to be signed in
+        and only affects your own wardrobe. Delete{" "}
+        <code className="font-mono">src/app/setup/page.tsx</code> once
+        everything works if you&apos;d rather not have it public.
       </p>
     </div>
   );
