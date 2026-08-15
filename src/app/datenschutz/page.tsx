@@ -173,20 +173,19 @@ export default function DatenschutzPage() {
         </p>
         <p>
           <strong className="text-ink">Zugriffsschutz der Bilddateien:</strong>{" "}
-          Fotos werden beim Speicherdienstleister als private Objekte ohne
-          öffentlich abrufbare Adresse abgelegt. Sie werden ausschließlich über
-          eine geschützte Schnittstelle unserer Anwendung ausgeliefert, die bei
-          jedem Abruf prüft, ob Sie angemeldet sind und ob das Bild zu Ihrem
-          Konto gehört. Zwischenspeicher Dritter dürfen die Bilder nicht
-          vorhalten.
+          Innerhalb der Anwendung werden Fotos ausschließlich über eine
+          geschützte Schnittstelle ausgeliefert, die bei jedem Abruf prüft, ob
+          Sie angemeldet sind und ob das Bild zu Ihrem Konto gehört. Die
+          Speicheradressen der Dateien werden dabei nicht offengelegt, und
+          Zwischenspeicher Dritter dürfen die Bilder nicht vorhalten.
         </p>
         <p>
-          Vor der Umstellung auf diese private Speicherung hochgeladene Fotos
-          können noch unter einer zufällig erzeugten, nicht veröffentlichten
-          Adresse liegen, die ohne Anmeldung abrufbar ist. Sie können solche
-          Einträge löschen und erneut anlegen, um sie in die geschützte
-          Speicherung zu überführen. Unabhängig davon empfehlen wir, keine
-          Fotos hochzuladen, auf denen Personen erkennbar sind.
+          Beim Speicherdienstleister liegen die Dateien derzeit unter zufällig
+          erzeugten, nicht veröffentlichten Adressen. Diese Adressen sind nicht
+          erratbar; wer eine davon jedoch erlangt, kann die Datei ohne
+          Anmeldung abrufen. Wir empfehlen daher, keine Fotos hochzuladen, auf
+          denen Personen erkennbar sind oder die weitere personenbezogene
+          Informationen enthalten.
         </p>
       </Section>
 

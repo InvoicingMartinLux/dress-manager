@@ -4,6 +4,7 @@ import { copy, del } from "@vercel/blob";
 import { db, garments } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { thumbVariant } from "@/lib/blob";
+import { isPublicStoreError, PUBLIC_STORE_HINT } from "@/lib/blob-server";
 
 export const maxDuration = 60;
 
@@ -66,9 +67,11 @@ export async function POST() {
   let migrated = 0;
   let alreadyPrivate = 0;
   let remaining = 0;
+  let storeIsPublic = false;
   const failures: Failure[] = [];
 
   for (const row of rows) {
+    if (storeIsPublic) break;
     if (migrated + failures.length >= BATCH_LIMIT) {
       remaining += 1;
       continue;
@@ -114,6 +117,12 @@ export async function POST() {
 
       migrated += 1;
     } catch (err) {
+      // The store's access level is fixed at creation, so this fails
+      // identically for every photo — report it once instead of per item.
+      if (isPublicStoreError(err)) {
+        storeIsPublic = true;
+        break;
+      }
       console.error("migration failed for garment", row.id, err);
       failures.push({
         id: row.id,
@@ -129,5 +138,7 @@ export async function POST() {
     alreadyPrivate,
     remaining,
     failures,
+    storeIsPublic,
+    ...(storeIsPublic ? { hint: PUBLIC_STORE_HINT } : {}),
   });
 }
