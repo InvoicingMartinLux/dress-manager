@@ -71,9 +71,17 @@ export default async function RootLayout({
           <footer className="border-t border-line px-6 py-6">
             <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-2 text-sm text-ink-faint">
               <span>Dress Manager — manage your wardrobe, simplify your style.</span>
-              <Link href="/setup" className="hover:text-ink-muted">
-                Setup check
-              </Link>
+              <span className="flex items-center gap-4">
+                <Link href="/impressum" className="hover:text-ink-muted">
+                  Impressum
+                </Link>
+                <Link href="/datenschutz" className="hover:text-ink-muted">
+                  Datenschutz
+                </Link>
+                <Link href="/setup" className="hover:text-ink-muted">
+                  Setup check
+                </Link>
+              </span>
             </div>
           </footer>
         </div>
