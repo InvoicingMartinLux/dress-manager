@@ -1,11 +1,7 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
-    ],
-  },
-};
+// Garment photos are private blobs streamed through /api/garments/[id]/image,
+// so no remote image host needs allowing.
+const nextConfig: NextConfig = {};
 
 export default nextConfig;

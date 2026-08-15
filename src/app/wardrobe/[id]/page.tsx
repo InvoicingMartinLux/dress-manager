@@ -6,6 +6,7 @@ import { ArrowLeft, Sparkles, Shirt } from "lucide-react";
 import { db, garments } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { findMatches, groupByCategory, type ScoredMatch } from "@/lib/matching";
+import { imageRoute } from "@/lib/blob";
 import GarmentCard from "@/components/GarmentCard";
 import DeleteGarmentButton from "@/components/DeleteGarmentButton";
 
@@ -147,9 +148,10 @@ export default async function GarmentPage({
         <div className="rise">
           <div className="card relative aspect-square overflow-hidden">
             <Image
-              src={item.imageUrl}
+              src={imageRoute(item.id)}
               alt={item.name}
               fill
+              unoptimized
               sizes="340px"
               className="object-cover"
               priority

@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { db, garments } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { thumbVariant } from "@/lib/blob";
 
 export async function DELETE(
   _req: Request,
@@ -23,7 +24,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
   try {
-    await del(item.imageUrl);
+    await del([item.imageUrl, thumbVariant(item.imageUrl)]);
   } catch {
     // Blob deletion is best-effort; the DB row is already gone.
   }

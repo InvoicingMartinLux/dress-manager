@@ -4,6 +4,7 @@ import { z } from "zod";
 import { desc, eq } from "drizzle-orm";
 import { db, garments, CATEGORIES, PATTERNS, SEASONS } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { thumbVariant } from "@/lib/blob";
 
 export const maxDuration = 60;
 
@@ -77,12 +78,28 @@ export async function POST(req: Request) {
       );
     }
     const ext = (file.type.split("/")[1] ?? "jpg").replace(/[^a-z0-9]/gi, "");
-    const blob = await put(
-      `garments/${session.userId}/${crypto.randomUUID()}.${ext}`,
-      file,
-      { access: "public" }
-    );
+    const pathname = `garments/${session.userId}/${crypto.randomUUID()}.${ext}`;
+    // Private: the blob has no publicly reachable URL, so the only way to
+    // read a photo is through the owner-checked image route.
+    const blob = await put(pathname, file, {
+      access: "private",
+      addRandomSuffix: false,
+    });
     imageUrl = blob.url;
+
+    // Optional companion thumbnail for the wardrobe grid. A failure here is
+    // not worth losing the upload over — the route falls back to full size.
+    const thumbnail = form?.get("thumbnail");
+    if (thumbnail instanceof File && thumbnail.size > 0) {
+      try {
+        await put(thumbVariant(pathname), thumbnail, {
+          access: "private",
+          addRandomSuffix: false,
+        });
+      } catch (err) {
+        console.error("thumbnail upload failed:", err);
+      }
+    }
   } catch (err) {
     console.error("blob upload failed:", err);
     return NextResponse.json(
