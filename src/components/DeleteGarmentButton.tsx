@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 
 export default function DeleteGarmentButton({ id }: { id: string }) {
   const router = useRouter();
@@ -17,8 +18,9 @@ export default function DeleteGarmentButton({ id }: { id: string }) {
         router.push("/wardrobe");
         router.refresh();
       }}
-      className="rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+      className="inline-flex shrink-0 items-center gap-1.5 rounded-card border border-line px-3 py-1.5 text-sm text-ink-muted transition-colors hover:border-danger hover:text-danger disabled:opacity-50"
     >
+      <Trash2 className="h-4 w-4" aria-hidden="true" />
       {busy ? "Removing…" : "Remove"}
     </button>
   );

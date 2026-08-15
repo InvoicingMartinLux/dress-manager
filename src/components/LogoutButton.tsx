@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 
 export default function LogoutButton() {
   const router = useRouter();
@@ -11,9 +12,11 @@ export default function LogoutButton() {
         router.push("/");
         router.refresh();
       }}
-      className="text-stone-500 hover:text-stone-900 hover:underline"
+      aria-label="Sign out"
+      className="inline-flex items-center gap-1.5 text-sm text-ink-muted transition-colors hover:text-ink"
     >
-      Sign out
+      <LogOut className="h-4 w-4" aria-hidden="true" />
+      <span className="hidden sm:inline">Sign out</span>
     </button>
   );
 }

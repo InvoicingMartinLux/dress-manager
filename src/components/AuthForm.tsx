@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { AlertCircle } from "lucide-react";
+import Logo from "@/components/Logo";
 
 export default function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
@@ -36,63 +38,94 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
   }
 
   return (
-    <div className="mx-auto max-w-sm py-12">
-      <h1 className="text-2xl font-bold">
-        {mode === "login" ? "Sign in" : "Create your account"}
-      </h1>
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
-        {mode === "register" && (
+    <div className="mx-auto max-w-md py-[clamp(1rem,4vw,3rem)]">
+      <div className="rise card p-8">
+        <Logo className="h-12 w-12 text-ink" />
+        <h1 className="mt-5 text-[2.25rem] font-bold leading-tight tracking-tight">
+          {mode === "login" ? "Welcome back" : "Create your account"}
+        </h1>
+        <p className="mt-2 text-ink-muted">
+          {mode === "login"
+            ? "Sign in to open your wardrobe."
+            : "Your wardrobe is private to you."}
+        </p>
+
+        <form onSubmit={onSubmit} className="mt-7 space-y-5">
+          {mode === "register" && (
+            <div>
+              <label htmlFor="name" className="field-label">
+                Name
+              </label>
+              <input id="name" name="name" required className="field" />
+            </div>
+          )}
           <div>
-            <label className="block text-sm font-medium">Name</label>
+            <label htmlFor="email" className="field-label">
+              Email
+            </label>
             <input
-              name="name"
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
               required
-              className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2"
+              className="field"
             />
           </div>
-        )}
-        <div>
-          <label className="block text-sm font-medium">Email</label>
-          <input
-            name="email"
-            type="email"
-            required
-            className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Password</label>
-          <input
-            name="password"
-            type="password"
-            required
-            minLength={mode === "register" ? 8 : 1}
-            className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2"
-          />
-          {mode === "register" && (
-            <p className="mt-1 text-xs text-stone-500">At least 8 characters.</p>
+          <div>
+            <label htmlFor="password" className="field-label">
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete={
+                mode === "login" ? "current-password" : "new-password"
+              }
+              required
+              minLength={mode === "register" ? 8 : 1}
+              className="field"
+            />
+            {mode === "register" && (
+              <p className="mt-1.5 text-sm text-ink-faint">
+                At least 8 characters.
+              </p>
+            )}
+          </div>
+
+          {error && (
+            <p className="flex items-start gap-2 text-sm text-danger">
+              <AlertCircle
+                className="mt-0.5 h-4 w-4 shrink-0"
+                aria-hidden="true"
+              />
+              {error}
+            </p>
           )}
-        </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          disabled={busy}
-          className="w-full rounded-md bg-stone-900 px-4 py-2 text-white hover:bg-stone-700 disabled:opacity-50"
-        >
-          {busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
-        </button>
-      </form>
-      <p className="mt-4 text-sm text-stone-600">
+
+          <button disabled={busy} className="btn btn-primary w-full">
+            {busy
+              ? "Please wait…"
+              : mode === "login"
+                ? "Sign in"
+                : "Create account"}
+          </button>
+        </form>
+      </div>
+
+      <p className="mt-5 text-center text-sm text-ink-muted">
         {mode === "login" ? (
           <>
             No account yet?{" "}
-            <Link href="/register" className="underline">
+            <Link href="/register" className="text-accent hover:underline">
               Create one
             </Link>
           </>
         ) : (
           <>
             Already have an account?{" "}
-            <Link href="/login" className="underline">
+            <Link href="/login" className="text-accent hover:underline">
               Sign in
             </Link>
           </>

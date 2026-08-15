@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Camera, AlertCircle, Check, X, Plus } from "lucide-react";
 import { CATEGORIES, PATTERNS, SEASONS } from "@/lib/db/schema";
 import { downscaleImage } from "@/lib/image";
 
@@ -77,7 +78,7 @@ export default function NewGarmentPage() {
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
     if (!file) {
-      setError("Please choose a photo first.");
+      setError("Choose a photo first.");
       return;
     }
     setSaving(true);
@@ -124,30 +125,37 @@ export default function NewGarmentPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="text-2xl font-bold">Add a garment</h1>
-      <p className="mt-1 text-sm text-stone-600">
-        Upload a photo — AI will detect the details, and you can adjust them
-        before saving.
+      <p className="label-caps text-ink-faint">Add to wardrobe</p>
+      <h1 className="mt-1 text-[2.25rem] font-bold leading-tight tracking-tight">
+        Photograph a garment
+      </h1>
+      <p className="mt-2 text-ink-muted">
+        The details are detected from the photo. Adjust anything that looks
+        wrong before saving.
       </p>
 
-      <form onSubmit={onSave} className="mt-6 space-y-6">
-        <div
-          className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-stone-300 bg-white p-6 text-center hover:border-stone-400"
+      <form onSubmit={onSave} className="mt-8 space-y-7">
+        <button
+          type="button"
           onClick={() => fileRef.current?.click()}
+          className="card flex w-full flex-col items-center justify-center border-dashed p-8 text-center transition-colors hover:border-accent"
         >
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={preview}
-              alt="Preview"
-              className="max-h-64 rounded-md object-contain"
+              alt="Selected garment"
+              className="max-h-72 rounded-card object-contain"
             />
           ) : (
             <>
-              <span className="text-3xl">📸</span>
-              <p className="mt-2 text-sm text-stone-600">
-                Click to choose a photo (JPEG, PNG, WebP — max 8 MB)
-              </p>
+              <span className="flex h-14 w-14 items-center justify-center rounded-card bg-accent-soft text-accent">
+                <Camera className="h-7 w-7" aria-hidden="true" />
+              </span>
+              <span className="mt-4 font-medium">Choose a photo</span>
+              <span className="mt-1 text-sm text-ink-faint">
+                JPEG, PNG or WebP — large photos are resized automatically
+              </span>
             </>
           )}
           <input
@@ -157,39 +165,56 @@ export default function NewGarmentPage() {
             className="hidden"
             onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
           />
-        </div>
+        </button>
 
         {analyzing && (
-          <p className="animate-pulse text-sm text-stone-600">
-            🔍 Analyzing your garment with AI…
-          </p>
+          <div className="space-y-2" aria-live="polite">
+            <p className="text-sm text-ink-muted">Reading the photo…</p>
+            <div className="shimmer h-2 w-full rounded-full" />
+            <div className="shimmer h-2 w-2/3 rounded-full" />
+          </div>
         )}
-        {analyzed && (
-          <p className="text-sm text-green-700">
-            ✓ Analyzed! Review the details below and adjust if needed.
-          </p>
-        )}
-        {error && <p className="text-sm text-red-600">{error}</p>}
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        {analyzed && (
+          <p className="flex items-center gap-2 text-sm text-success">
+            <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
+            Details detected — review them below.
+          </p>
+        )}
+
+        {error && (
+          <p className="flex items-start gap-2 text-sm text-danger">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            {error}
+          </p>
+        )}
+
+        <div className="grid gap-5 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium">Name</label>
+            <label htmlFor="name" className="field-label">
+              Name
+            </label>
             <input
+              id="name"
               required
               value={details.name}
               onChange={(e) => setDetails({ ...details, name: e.target.value })}
-              className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2"
-              placeholder="e.g. Light blue oxford shirt"
+              className="field"
+              placeholder="Light blue oxford shirt"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium">Category</label>
+            <label htmlFor="category" className="field-label">
+              Category
+            </label>
             <select
+              id="category"
               value={details.category}
               onChange={(e) =>
                 setDetails({ ...details, category: e.target.value })
               }
-              className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 capitalize"
+              className="field capitalize"
             >
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
@@ -198,25 +223,33 @@ export default function NewGarmentPage() {
               ))}
             </select>
           </div>
+
           <div>
-            <label className="block text-sm font-medium">Subcategory</label>
+            <label htmlFor="subcategory" className="field-label">
+              Subcategory
+            </label>
             <input
+              id="subcategory"
               value={details.subcategory}
               onChange={(e) =>
                 setDetails({ ...details, subcategory: e.target.value })
               }
-              className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2"
-              placeholder="e.g. jeans, t-shirt"
+              className="field"
+              placeholder="jeans, t-shirt"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium">Pattern</label>
+            <label htmlFor="pattern" className="field-label">
+              Pattern
+            </label>
             <select
+              id="pattern"
               value={details.pattern}
               onChange={(e) =>
                 setDetails({ ...details, pattern: e.target.value })
               }
-              className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 capitalize"
+              className="field capitalize"
             >
               {PATTERNS.map((p) => (
                 <option key={p} value={p}>
@@ -225,14 +258,16 @@ export default function NewGarmentPage() {
               ))}
             </select>
           </div>
+
           <div>
-            <label className="block text-sm font-medium">
+            <label htmlFor="formality" className="field-label">
               Formality: {details.formality}{" "}
-              <span className="text-xs text-stone-500">
-                (1 = casual, 5 = formal)
+              <span className="font-normal text-ink-faint">
+                (1 casual — 5 formal)
               </span>
             </label>
             <input
+              id="formality"
               type="range"
               min={1}
               max={5}
@@ -240,40 +275,43 @@ export default function NewGarmentPage() {
               onChange={(e) =>
                 setDetails({ ...details, formality: Number(e.target.value) })
               }
-              className="mt-2 w-full"
+              className="mt-2 w-full accent-[var(--accent)]"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Colors</label>
-          <div className="mt-2 space-y-2">
+          <span className="field-label">Colors</span>
+          <div className="space-y-2">
             {details.colors.map((c, i) => (
               <div key={i} className="flex items-center gap-2">
                 <input
                   type="color"
+                  aria-label={`Color ${i + 1}`}
                   value={/^#[0-9a-fA-F]{6}$/.test(c.hex) ? c.hex : "#888888"}
                   onChange={(e) => setColor(i, { hex: e.target.value })}
-                  className="h-9 w-12 cursor-pointer rounded border border-stone-300"
+                  className="h-10 w-12 shrink-0 cursor-pointer rounded-[4px] border border-line bg-surface p-1"
                 />
                 <input
                   value={c.name}
                   onChange={(e) => setColor(i, { name: e.target.value })}
                   placeholder="Color name, e.g. navy blue"
-                  className="flex-1 rounded-md border border-stone-300 px-3 py-2"
+                  aria-label={`Color ${i + 1} name`}
+                  className="field"
                 />
                 {details.colors.length > 1 && (
                   <button
                     type="button"
+                    aria-label="Remove color"
                     onClick={() =>
                       setDetails((d) => ({
                         ...d,
                         colors: d.colors.filter((_, j) => j !== i),
                       }))
                     }
-                    className="px-2 text-stone-400 hover:text-red-600"
+                    className="shrink-0 rounded-[4px] p-2 text-ink-faint transition-colors hover:text-danger"
                   >
-                    ✕
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </button>
                 )}
               </div>
@@ -287,23 +325,25 @@ export default function NewGarmentPage() {
                     colors: [...d.colors, { name: "", hex: "#888888" }],
                   }))
                 }
-                className="text-sm text-stone-600 underline"
+                className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline"
               >
-                + Add color
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Add color
               </button>
             )}
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Seasons</label>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <span className="field-label">Seasons</span>
+          <div className="flex flex-wrap gap-2">
             {SEASONS.map((s) => {
               const active = details.seasons.includes(s);
               return (
                 <button
                   key={s}
                   type="button"
+                  aria-pressed={active}
                   onClick={() =>
                     setDetails((d) => ({
                       ...d,
@@ -312,7 +352,11 @@ export default function NewGarmentPage() {
                         : [...d.seasons, s],
                     }))
                   }
-                  className={`rounded-full border px-3 py-1 text-sm capitalize ${active ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 hover:bg-stone-100"}`}
+                  className={`rounded-card border px-3.5 py-1.5 text-sm capitalize transition-colors ${
+                    active
+                      ? "border-accent bg-accent-soft font-medium text-accent"
+                      : "border-line bg-surface text-ink-muted hover:text-ink"
+                  }`}
                 >
                   {s}
                 </button>
@@ -323,7 +367,7 @@ export default function NewGarmentPage() {
 
         <button
           disabled={saving || analyzing}
-          className="w-full rounded-md bg-stone-900 px-4 py-2.5 text-white hover:bg-stone-700 disabled:opacity-50"
+          className="btn btn-primary w-full"
         >
           {saving ? "Saving…" : "Save to wardrobe"}
         </button>
