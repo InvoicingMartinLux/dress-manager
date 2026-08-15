@@ -1,17 +1,22 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
+import Logo from "@/components/Logo";
 
 export default async function Home() {
   const session = await getSession();
   if (session) redirect("/wardrobe");
 
   return (
-    <div className="mx-auto max-w-2xl py-16 text-center">
-      <h1 className="text-4xl font-bold tracking-tight">
-        Your wardrobe, digitized.
+    <div className="mx-auto max-w-2xl py-12 text-center">
+      <Logo className="mx-auto h-28 w-28" />
+      <h1 className="mt-6 text-3xl font-light uppercase tracking-[0.28em] text-[#1E2B3C] sm:text-4xl">
+        Dress Manager
       </h1>
-      <p className="mt-4 text-lg text-stone-600">
+      <p className="mt-3 text-sm uppercase tracking-[0.18em] text-[#B39B7D]">
+        Manage your wardrobe. Simplify your style.
+      </p>
+      <p className="mt-8 text-lg text-stone-600">
         Photograph your clothes, let AI catalog them, and get instant
         suggestions for what goes with what — like which shirts match your blue
         trousers.

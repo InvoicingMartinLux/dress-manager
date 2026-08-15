@@ -3,10 +3,11 @@ import Link from "next/link";
 import "./globals.css";
 import { getSession } from "@/lib/auth";
 import LogoutButton from "@/components/LogoutButton";
+import Logo from "@/components/Logo";
 
 export const metadata: Metadata = {
   title: "Dress Manager",
-  description: "Your digital wardrobe with outfit matching",
+  description: "Manage your wardrobe. Simplify your style.",
 };
 
 export default async function RootLayout({
@@ -18,8 +19,11 @@ export default async function RootLayout({
       <body className="min-h-screen bg-stone-50 text-stone-900 antialiased">
         <header className="border-b border-stone-200 bg-white">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-            <Link href="/" className="text-lg font-semibold tracking-tight">
-              👗 Dress Manager
+            <Link href="/" className="flex items-center gap-2.5">
+              <Logo className="h-8 w-8" />
+              <span className="text-base font-light uppercase tracking-[0.18em] text-[#1E2B3C]">
+                Dress Manager
+              </span>
             </Link>
             <nav className="flex items-center gap-4 text-sm">
               {session ? (
