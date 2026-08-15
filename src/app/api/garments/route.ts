@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { put } from "@vercel/blob";
 import { z } from "zod";
 import { desc, eq } from "drizzle-orm";
 import { db, garments, CATEGORIES, PATTERNS, SEASONS } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { thumbVariant } from "@/lib/blob";
+import { putPreferPrivate } from "@/lib/blob-server";
 
 export const maxDuration = 60;
 
@@ -79,12 +79,9 @@ export async function POST(req: Request) {
     }
     const ext = (file.type.split("/")[1] ?? "jpg").replace(/[^a-z0-9]/gi, "");
     const pathname = `garments/${session.userId}/${crypto.randomUUID()}.${ext}`;
-    // Private: the blob has no publicly reachable URL, so the only way to
-    // read a photo is through the owner-checked image route.
-    const blob = await put(pathname, file, {
-      access: "private",
-      addRandomSuffix: false,
-    });
+    // Private where the store supports it; either way the photo is only
+    // served through the owner-checked image route.
+    const blob = await putPreferPrivate(pathname, file);
     imageUrl = blob.url;
 
     // Optional companion thumbnail for the wardrobe grid. A failure here is
@@ -92,10 +89,7 @@ export async function POST(req: Request) {
     const thumbnail = form?.get("thumbnail");
     if (thumbnail instanceof File && thumbnail.size > 0) {
       try {
-        await put(thumbVariant(pathname), thumbnail, {
-          access: "private",
-          addRandomSuffix: false,
-        });
+        await putPreferPrivate(thumbVariant(pathname), thumbnail);
       } catch (err) {
         console.error("thumbnail upload failed:", err);
       }

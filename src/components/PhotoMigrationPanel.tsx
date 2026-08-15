@@ -9,6 +9,8 @@ type Result = {
   alreadyPrivate: number;
   remaining: number;
   failures: { id: string; name: string; error: string }[];
+  storeIsPublic?: boolean;
+  hint?: string;
 };
 
 export default function PhotoMigrationPanel() {
@@ -74,7 +76,26 @@ export default function PhotoMigrationPanel() {
         </p>
       )}
 
-      {result && (
+      {result?.storeIsPublic && (
+        <div className="mt-4 rounded-card border border-danger/40 bg-accent-soft/40 p-4 text-sm">
+          <p className="flex items-start gap-2 font-medium text-ink">
+            <AlertCircle
+              className="mt-0.5 h-4 w-4 shrink-0 text-danger"
+              aria-hidden="true"
+            />
+            Nothing was migrated — this Blob store cannot hold private files.
+          </p>
+          <p className="mt-2 text-ink-muted">{result.hint}</p>
+          <p className="mt-2 text-ink-muted">
+            Until then your photos stay in public storage. The app never puts
+            their addresses in a page, and every image is still served only
+            after checking your session — but anyone who obtained an address
+            could open the file directly.
+          </p>
+        </div>
+      )}
+
+      {result && !result.storeIsPublic && (
         <div className="mt-4 space-y-2 text-sm">
           <p className="text-ink-muted">
             Checked {result.checked}{" "}
