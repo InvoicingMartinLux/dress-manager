@@ -36,9 +36,40 @@ export const garments = pgTable("garments", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+/**
+ * A pairing the wearer chose themselves, which outranks the computed score.
+ *
+ * Pairings are symmetric: the two garment ids are stored in a fixed order
+ * (smaller id first) so that A-with-B and B-with-A are the same row.
+ */
+export const favoriteMatches = pgTable("favorite_matches", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  garmentAId: uuid("garment_a_id")
+    .notNull()
+    .references(() => garments.id, { onDelete: "cascade" }),
+  garmentBId: uuid("garment_b_id")
+    .notNull()
+    .references(() => garments.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+/** Orders a pair of garment ids so a pairing has one canonical representation. */
+export function favoritePair(
+  one: string,
+  other: string
+): { garmentAId: string; garmentBId: string } {
+  return one < other
+    ? { garmentAId: one, garmentBId: other }
+    : { garmentAId: other, garmentBId: one };
+}
+
 export type User = typeof users.$inferSelect;
 export type Garment = typeof garments.$inferSelect;
 export type NewGarment = typeof garments.$inferInsert;
+export type FavoriteMatch = typeof favoriteMatches.$inferSelect;
 
 export const CATEGORIES = [
   "top",

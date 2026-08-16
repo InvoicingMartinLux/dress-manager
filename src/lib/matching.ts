@@ -15,6 +15,8 @@ export type ScoredMatch = {
   score: number;
   reasons: string[];
   components: MatchComponent[];
+  /** Paired by hand, which outranks the score. */
+  favorite: boolean;
 };
 
 /** Which categories are worth recommending alongside a given category. */
@@ -338,7 +340,7 @@ export function scoreMatch(base: Garment, candidate: Garment): ScoredMatch {
     reasons.push(weakest.note);
   }
 
-  return { garment: candidate, score, reasons, components };
+  return { garment: candidate, score, reasons, components, favorite: false };
 }
 
 /**
@@ -346,7 +348,11 @@ export function scoreMatch(base: Garment, candidate: Garment): ScoredMatch {
  * sorted by match score, best first. Garments in the laundry are left out —
  * they are not available to wear.
  */
-export function findMatches(base: Garment, wardrobe: Garment[]): ScoredMatch[] {
+export function findMatches(
+  base: Garment,
+  wardrobe: Garment[],
+  favoriteIds: ReadonlySet<string> = new Set()
+): ScoredMatch[] {
   const wanted = COMPLEMENTS[base.category as Category] ?? [];
   return wardrobe
     .filter(
@@ -355,8 +361,13 @@ export function findMatches(base: Garment, wardrobe: Garment[]): ScoredMatch[] {
         !g.isDirty &&
         wanted.includes(g.category as Category)
     )
-    .map((g) => scoreMatch(base, g))
-    .sort((a, b) => b.score - a.score);
+    .map((g) => ({ ...scoreMatch(base, g), favorite: favoriteIds.has(g.id) }))
+    .sort((a, b) => {
+      // Hand-picked pairings come first whatever they scored; within each
+      // band the better score wins.
+      if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
+      return b.score - a.score;
+    });
 }
 
 /** How many otherwise-matching garments are unavailable because of laundry. */
