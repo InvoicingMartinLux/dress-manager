@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { desc, eq } from "drizzle-orm";
-import { Shirt, Plus } from "lucide-react";
-import { db, garments, CATEGORIES } from "@/lib/db";
+import { Shirt, Plus, Droplets } from "lucide-react";
+import { db, ensureSchema, garments, CATEGORIES } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import GarmentCard from "@/components/GarmentCard";
+import WashButton from "@/components/WashButton";
 
 export const dynamic = "force-dynamic";
 
@@ -17,16 +18,20 @@ export default async function WardrobePage({
   if (!session) redirect("/login");
 
   const { category } = await searchParams;
+  await ensureSchema();
   const items = await db()
     .select()
     .from(garments)
     .where(eq(garments.userId, session.userId))
     .orderBy(desc(garments.createdAt));
 
+  const dirtyCount = items.filter((g) => g.isDirty).length;
   const filtered =
-    category && CATEGORIES.includes(category as (typeof CATEGORIES)[number])
-      ? items.filter((g) => g.category === category)
-      : items;
+    category === "dirty"
+      ? items.filter((g) => g.isDirty)
+      : category && CATEGORIES.includes(category as (typeof CATEGORIES)[number])
+        ? items.filter((g) => g.category === category)
+        : items;
 
   return (
     <div>
@@ -37,10 +42,13 @@ export default async function WardrobePage({
             {items.length} {items.length === 1 ? "piece" : "pieces"}
           </h1>
         </div>
-        <Link href="/wardrobe/new" className="btn btn-primary">
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Add item
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          {items.length > 0 && <WashButton dirtyCount={dirtyCount} />}
+          <Link href="/wardrobe/new" className="btn btn-primary">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Add item
+          </Link>
+        </div>
       </div>
 
       {items.length > 0 && (
@@ -61,6 +69,12 @@ export default async function WardrobePage({
               </FilterChip>
             );
           })}
+          {dirtyCount > 0 && (
+            <FilterChip href="/wardrobe?category=dirty" active={category === "dirty"}>
+              <Droplets className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+              Laundry ({dirtyCount})
+            </FilterChip>
+          )}
         </div>
       )}
 

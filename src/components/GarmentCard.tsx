@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Droplets } from "lucide-react";
 import type { Garment } from "@/lib/db/schema";
 import { imageRoute } from "@/lib/blob";
 
@@ -31,6 +32,15 @@ export default function GarmentCard({
           className="object-cover"
         />
         {badge && <div className="absolute right-2 top-2">{badge}</div>}
+        {garment.isDirty && (
+          <span
+            className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-ink/85 px-2 py-0.5 text-xs font-medium text-surface"
+            title="In the laundry"
+          >
+            <Droplets className="h-3 w-3" aria-hidden="true" />
+            Dirty
+          </span>
+        )}
       </div>
       <div className="p-3">
         <p className="truncate text-sm font-medium">{garment.name}</p>
