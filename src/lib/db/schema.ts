@@ -1,4 +1,5 @@
 import {
+  boolean,
   integer,
   jsonb,
   pgTable,
@@ -30,6 +31,8 @@ export const garments = pgTable("garments", {
   formality: integer("formality").notNull().default(3),
   seasons: jsonb("seasons").$type<string[]>().notNull().default([]),
   imageUrl: text("image_url").notNull(),
+  /** In the laundry: kept out of match suggestions until washed. */
+  isDirty: boolean("is_dirty").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

@@ -343,14 +343,32 @@ export function scoreMatch(base: Garment, candidate: Garment): ScoredMatch {
 
 /**
  * Given a base garment and the full wardrobe, return complementary items
- * sorted by match score, best first.
+ * sorted by match score, best first. Garments in the laundry are left out —
+ * they are not available to wear.
  */
 export function findMatches(base: Garment, wardrobe: Garment[]): ScoredMatch[] {
   const wanted = COMPLEMENTS[base.category as Category] ?? [];
   return wardrobe
-    .filter((g) => g.id !== base.id && wanted.includes(g.category as Category))
+    .filter(
+      (g) =>
+        g.id !== base.id &&
+        !g.isDirty &&
+        wanted.includes(g.category as Category)
+    )
     .map((g) => scoreMatch(base, g))
     .sort((a, b) => b.score - a.score);
+}
+
+/** How many otherwise-matching garments are unavailable because of laundry. */
+export function countDirtyCandidates(
+  base: Garment,
+  wardrobe: Garment[]
+): number {
+  const wanted = COMPLEMENTS[base.category as Category] ?? [];
+  return wardrobe.filter(
+    (g) =>
+      g.id !== base.id && g.isDirty && wanted.includes(g.category as Category)
+  ).length;
 }
 
 /** Group ranked matches by category, preserving the score order within each. */

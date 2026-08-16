@@ -2,13 +2,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { ArrowLeft, Sparkles, Shirt } from "lucide-react";
-import { db, garments } from "@/lib/db";
+import { ArrowLeft, Sparkles, Shirt, Pencil, Droplets } from "lucide-react";
+import { db, ensureSchema, garments } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { findMatches, groupByCategory, type ScoredMatch } from "@/lib/matching";
+import {
+  countDirtyCandidates,
+  findMatches,
+  groupByCategory,
+  type ScoredMatch,
+} from "@/lib/matching";
 import { imageRoute } from "@/lib/blob";
 import GarmentCard from "@/components/GarmentCard";
 import DeleteGarmentButton from "@/components/DeleteGarmentButton";
+import DirtyToggle from "@/components/DirtyToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -124,6 +130,7 @@ export default async function GarmentPage({
   if (!session) redirect("/login");
   const { id } = await params;
 
+  await ensureSchema();
   const wardrobe = await db()
     .select()
     .from(garments)
@@ -133,6 +140,7 @@ export default async function GarmentPage({
   if (!item) notFound();
 
   const groups = groupByCategory(findMatches(item, wardrobe));
+  const inLaundry = countDirtyCandidates(item, wardrobe);
 
   return (
     <div>
@@ -158,17 +166,34 @@ export default async function GarmentPage({
             />
           </div>
 
-          <div className="mt-5 flex items-start justify-between gap-3">
-            <div>
-              <h1 className="text-2xl font-bold leading-tight tracking-tight">
-                {item.name}
-              </h1>
-              <p className="mt-1 text-sm capitalize text-ink-faint">
-                {item.subcategory || item.category}
-              </p>
-            </div>
+          <div className="mt-5">
+            <h1 className="text-2xl font-bold leading-tight tracking-tight">
+              {item.name}
+            </h1>
+            <p className="mt-1 text-sm capitalize text-ink-faint">
+              {item.subcategory || item.category}
+            </p>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <DirtyToggle id={item.id} isDirty={item.isDirty} />
+            <Link
+              href={`/wardrobe/${item.id}/edit`}
+              className="inline-flex items-center gap-1.5 rounded-card border border-line px-3 py-1.5 text-sm text-ink-muted transition-colors hover:text-ink"
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
+              Edit
+            </Link>
             <DeleteGarmentButton id={item.id} />
           </div>
+
+          {item.isDirty && (
+            <p className="mt-3 flex items-start gap-2 rounded-card bg-accent-soft p-3 text-sm text-accent">
+              <Droplets className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              This piece is in the laundry, so it is left out of the
+              suggestions for your other clothes.
+            </p>
+          )}
 
           <dl className="mt-5 space-y-3 text-sm">
             <div className="flex items-center justify-between gap-4">
@@ -215,6 +240,13 @@ export default async function GarmentPage({
           <h2 className="text-2xl font-bold tracking-tight">
             What goes with this?
           </h2>
+
+          {inLaundry > 0 && (
+            <p className="mt-2 text-sm text-ink-faint">
+              {inLaundry} matching {inLaundry === 1 ? "piece is" : "pieces are"}{" "}
+              in the laundry and left out below.
+            </p>
+          )}
 
           {groups.length === 0 ? (
             <div className="card mt-5 flex flex-col items-center px-6 py-14 text-center">

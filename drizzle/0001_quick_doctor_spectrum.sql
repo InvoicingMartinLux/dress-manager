@@ -1,0 +1,1 @@
+ALTER TABLE "garments" ADD COLUMN "is_dirty" boolean DEFAULT false NOT NULL;
