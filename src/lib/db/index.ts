@@ -30,16 +30,32 @@ let schemaEnsured: Promise<void> | null = null;
  */
 export function ensureSchema(): Promise<void> {
   if (!schemaEnsured) {
-    schemaEnsured = db()
-      .execute(
+    schemaEnsured = (async () => {
+      const database = db();
+      // One statement per call: the HTTP driver does not take batches.
+      await database.execute(
         sql`ALTER TABLE "garments" ADD COLUMN IF NOT EXISTS "is_dirty" boolean DEFAULT false NOT NULL`
-      )
-      .then(() => undefined)
-      .catch((err) => {
-        // Let the next request try again rather than caching the failure.
-        schemaEnsured = null;
-        throw err;
-      });
+      );
+      await database.execute(
+        sql`CREATE TABLE IF NOT EXISTS "favorite_matches" (
+          "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+          "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE cascade,
+          "garment_a_id" uuid NOT NULL REFERENCES "garments"("id") ON DELETE cascade,
+          "garment_b_id" uuid NOT NULL REFERENCES "garments"("id") ON DELETE cascade,
+          "created_at" timestamp DEFAULT now() NOT NULL
+        )`
+      );
+      // Ids are stored smallest-first, so this also prevents the same pairing
+      // being saved twice in the opposite order.
+      await database.execute(
+        sql`CREATE UNIQUE INDEX IF NOT EXISTS "favorite_matches_pair_idx"
+            ON "favorite_matches" ("user_id", "garment_a_id", "garment_b_id")`
+      );
+    })().catch((err) => {
+      // Let the next request try again rather than caching the failure.
+      schemaEnsured = null;
+      throw err;
+    });
   }
   return schemaEnsured;
 }

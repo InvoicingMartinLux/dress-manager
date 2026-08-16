@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
-import { ArrowLeft, Sparkles, Shirt, Pencil, Droplets } from "lucide-react";
-import { db, ensureSchema, garments } from "@/lib/db";
+import { and, eq, or } from "drizzle-orm";
+import { ArrowLeft, Sparkles, Shirt, Pencil, Droplets, Heart } from "lucide-react";
+import { db, ensureSchema, favoriteMatches, garments } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import {
   countDirtyCandidates,
@@ -15,6 +15,7 @@ import { imageRoute } from "@/lib/blob";
 import GarmentCard from "@/components/GarmentCard";
 import DeleteGarmentButton from "@/components/DeleteGarmentButton";
 import DirtyToggle from "@/components/DirtyToggle";
+import FavoriteToggle from "@/components/FavoriteToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -35,12 +36,20 @@ function scoreStyle(score: number) {
   return { text: "Avoid", color: "var(--danger)" };
 }
 
-function MatchRow({ match, best }: { match: ScoredMatch; best: boolean }) {
+function MatchRow({
+  match,
+  best,
+  baseId,
+}: {
+  match: ScoredMatch;
+  best: boolean;
+  baseId: string;
+}) {
   const style = scoreStyle(match.score);
   return (
     <div
       className={`card flex gap-4 p-3 transition-shadow duration-200 hover:shadow-[var(--shadow-lift)] ${
-        best ? "border-accent" : ""
+        match.favorite ? "border-magenta" : best ? "border-accent" : ""
       }`}
     >
       <div className="w-24 shrink-0 sm:w-28">
@@ -59,6 +68,12 @@ function MatchRow({ match, best }: { match: ScoredMatch; best: boolean }) {
 
       <div className="min-w-0 flex-1 py-1">
         <div className="flex flex-wrap items-center gap-2">
+          {match.favorite && (
+            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-magenta ring-1 ring-magenta">
+              <Heart className="h-3 w-3" fill="currentColor" aria-hidden="true" />
+              Favorite pairing
+            </span>
+          )}
           {best && (
             <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent">
               <Sparkles className="h-3 w-3" aria-hidden="true" />
@@ -91,6 +106,15 @@ function MatchRow({ match, best }: { match: ScoredMatch; best: boolean }) {
             </li>
           ))}
         </ul>
+
+        <div className="mt-2">
+          <FavoriteToggle
+            garmentId={baseId}
+            otherId={match.garment.id}
+            favorite={match.favorite}
+            otherName={match.garment.name}
+          />
+        </div>
 
         <details className="mt-2 group">
           <summary className="cursor-pointer list-none text-xs text-ink-faint hover:text-ink-muted">
@@ -139,7 +163,28 @@ export default async function GarmentPage({
   const item = wardrobe.find((g) => g.id === id);
   if (!item) notFound();
 
-  const groups = groupByCategory(findMatches(item, wardrobe));
+  // Pairings are stored once with the ids in a fixed order, so this garment
+  // may be on either side of the row.
+  const pairings = await db()
+    .select({
+      garmentAId: favoriteMatches.garmentAId,
+      garmentBId: favoriteMatches.garmentBId,
+    })
+    .from(favoriteMatches)
+    .where(
+      and(
+        eq(favoriteMatches.userId, session.userId),
+        or(
+          eq(favoriteMatches.garmentAId, id),
+          eq(favoriteMatches.garmentBId, id)
+        )
+      )
+    );
+  const favoriteIds = new Set(
+    pairings.map((p) => (p.garmentAId === id ? p.garmentBId : p.garmentAId))
+  );
+
+  const groups = groupByCategory(findMatches(item, wardrobe, favoriteIds));
   const inLaundry = countDirtyCandidates(item, wardrobe);
 
   return (
@@ -264,16 +309,27 @@ export default async function GarmentPage({
           ) : (
             <div className="mt-5 space-y-9">
               {groups.map(({ category, matches }) => {
-                const shown = matches.slice(0, 5);
-                const rest = matches.slice(5);
+                // Favorites are never collapsed away, however they scored;
+                // the top-scoring piece that is not one gets "Best match".
+                const favorites = matches.filter((m) => m.favorite);
+                const others = matches.filter((m) => !m.favorite);
+                const shown = [...favorites, ...others.slice(0, 5)];
+                const rest = others.slice(5);
+                const bestId = others[0]?.garment.id;
+
                 return (
                   <section key={category}>
                     <h3 className="label-caps mb-3 text-ink-faint">
                       {CATEGORY_LABELS[category] ?? category}
                     </h3>
                     <div className="space-y-3">
-                      {shown.map((m, i) => (
-                        <MatchRow key={m.garment.id} match={m} best={i === 0} />
+                      {shown.map((m) => (
+                        <MatchRow
+                          key={m.garment.id}
+                          match={m}
+                          best={m.garment.id === bestId}
+                          baseId={item.id}
+                        />
                       ))}
                     </div>
                     {rest.length > 0 && (
@@ -288,6 +344,7 @@ export default async function GarmentPage({
                               key={m.garment.id}
                               match={m}
                               best={false}
+                              baseId={item.id}
                             />
                           ))}
                         </div>
