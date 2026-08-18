@@ -120,3 +120,33 @@ export const bagItems = pgTable("bag_items", {
 
 export type Bag = typeof bags.$inferSelect;
 export type BagItem = typeof bagItems.$inferSelect;
+
+/**
+ * A reusable packing template — "ski trip", "long summer vacation".
+ *
+ * Distinct from a bag: a bag is one actual packing, a pack list is the
+ * recipe you apply to it. Applying a list copies its garments into the bag
+ * and the two stay independent afterwards.
+ */
+export const packLists = pgTable("pack_lists", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const packListItems = pgTable("pack_list_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  packListId: uuid("pack_list_id")
+    .notNull()
+    .references(() => packLists.id, { onDelete: "cascade" }),
+  garmentId: uuid("garment_id")
+    .notNull()
+    .references(() => garments.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type PackList = typeof packLists.$inferSelect;
+export type PackListItem = typeof packListItems.$inferSelect;

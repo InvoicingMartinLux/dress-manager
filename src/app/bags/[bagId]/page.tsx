@@ -1,14 +1,24 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { ArrowLeft, Briefcase, Droplets } from "lucide-react";
-import { bagItems, bags, db, ensureSchema, garments } from "@/lib/db";
+import {
+  bagItems,
+  bags,
+  db,
+  ensureSchema,
+  garments,
+  packListItems,
+  packLists,
+} from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { imageRoute, UUID_PATTERN } from "@/lib/blob";
 import type { Garment } from "@/lib/db/schema";
-import BagItemToggle from "@/components/BagItemToggle";
-import DeleteBagButton from "@/components/DeleteBagButton";
+import MembershipToggle from "@/components/MembershipToggle";
+import DeleteCollectionButton from "@/components/DeleteCollectionButton";
+import RenameCollectionForm from "@/components/RenameCollectionForm";
+import ApplyPackListsForm from "@/components/ApplyPackListsForm";
 import DirtyToggle from "@/components/DirtyToggle";
 
 export const dynamic = "force-dynamic";
@@ -43,11 +53,14 @@ function PackedRow({ garment, bagId }: { garment: Garment; bagId: string }) {
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <DirtyToggle id={garment.id} isDirty={garment.isDirty} />
-          <BagItemToggle
-            bagId={bagId}
+          <MembershipToggle
+            endpoint={`/api/bags/${bagId}/items`}
             garmentId={garment.id}
-            inBag
+            flagKey="inBag"
+            member
             label={garment.name}
+            addLabel="Pack"
+            removeLabel="Take out"
           />
         </div>
       </div>
@@ -90,6 +103,32 @@ export default async function BagPage({
   const packed = wardrobe.filter((g) => packedIds.has(g.id));
   const available = wardrobe.filter((g) => !packedIds.has(g.id));
 
+  const myLists = await db()
+    .select()
+    .from(packLists)
+    .where(eq(packLists.userId, session.userId))
+    .orderBy(desc(packLists.createdAt));
+
+  const listEntries = myLists.length
+    ? await db()
+        .select({ packListId: packListItems.packListId })
+        .from(packListItems)
+        .where(
+          inArray(
+            packListItems.packListId,
+            myLists.map((l) => l.id)
+          )
+        )
+    : [];
+
+  const listCounts = new Map<string, number>();
+  for (const entry of listEntries) {
+    listCounts.set(
+      entry.packListId,
+      (listCounts.get(entry.packListId) ?? 0) + 1
+    );
+  }
+
   return (
     <div className="mx-auto max-w-3xl">
       <Link
@@ -110,7 +149,18 @@ export default async function BagPage({
             {packed.length} {packed.length === 1 ? "piece" : "pieces"} packed
           </p>
         </div>
-        <DeleteBagButton bagId={bag.id} name={bag.name} />
+        <div className="flex flex-wrap items-center gap-2">
+          <RenameCollectionForm
+            endpoint={`/api/bags/${bag.id}`}
+            currentName={bag.name}
+          />
+          <DeleteCollectionButton
+            endpoint={`/api/bags/${bag.id}`}
+            redirectTo="/bags"
+            label="Remove bag"
+            confirmText={`Remove the bag "${bag.name}"?\n\nThe clothes in it stay in your wardrobe — only the bag goes.`}
+          />
+        </div>
       </div>
 
       <p className="mt-4 flex items-start gap-2 rounded-card bg-accent-soft p-3 text-sm text-accent">
@@ -118,6 +168,17 @@ export default async function BagPage({
         Opening a piece from here matches it only against the rest of this bag.
         Removing the bag leaves every garment in your wardrobe.
       </p>
+
+      <section className="mt-6">
+        <ApplyPackListsForm
+          bagId={bag.id}
+          lists={myLists.map((l) => ({
+            id: l.id,
+            name: l.name,
+            count: listCounts.get(l.id) ?? 0,
+          }))}
+        />
+      </section>
 
       <section className="mt-8">
         <h2 className="label-caps text-ink-faint">Packed</h2>
@@ -165,11 +226,14 @@ export default async function BagPage({
                     </span>
                   )}
                 </span>
-                <BagItemToggle
-                  bagId={bag.id}
+                <MembershipToggle
+                  endpoint={`/api/bags/${bag.id}/items`}
                   garmentId={g.id}
-                  inBag={false}
+                  flagKey="inBag"
+                  member={false}
                   label={g.name}
+                  addLabel="Pack"
+                  removeLabel="Take out"
                 />
               </div>
             ))}
