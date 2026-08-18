@@ -40,6 +40,7 @@ export default async function RootLayout({
                 {session ? (
                   <>
                     <NavLink href="/wardrobe">Wardrobe</NavLink>
+                    <NavLink href="/bags">Bags</NavLink>
                     <Link
                       href="/wardrobe/new"
                       className="btn btn-primary px-4 py-2 text-sm"
