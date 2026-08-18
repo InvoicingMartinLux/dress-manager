@@ -51,6 +51,26 @@ export function ensureSchema(): Promise<void> {
         sql`CREATE UNIQUE INDEX IF NOT EXISTS "favorite_matches_pair_idx"
             ON "favorite_matches" ("user_id", "garment_a_id", "garment_b_id")`
       );
+      await database.execute(
+        sql`CREATE TABLE IF NOT EXISTS "bags" (
+          "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+          "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE cascade,
+          "name" text NOT NULL,
+          "created_at" timestamp DEFAULT now() NOT NULL
+        )`
+      );
+      await database.execute(
+        sql`CREATE TABLE IF NOT EXISTS "bag_items" (
+          "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+          "bag_id" uuid NOT NULL REFERENCES "bags"("id") ON DELETE cascade,
+          "garment_id" uuid NOT NULL REFERENCES "garments"("id") ON DELETE cascade,
+          "created_at" timestamp DEFAULT now() NOT NULL
+        )`
+      );
+      await database.execute(
+        sql`CREATE UNIQUE INDEX IF NOT EXISTS "bag_items_pair_idx"
+            ON "bag_items" ("bag_id", "garment_id")`
+      );
     })().catch((err) => {
       // Let the next request try again rather than caching the failure.
       schemaEnsured = null;

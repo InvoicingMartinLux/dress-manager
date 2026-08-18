@@ -91,3 +91,32 @@ export const PATTERNS = [
 ] as const;
 
 export const SEASONS = ["spring", "summer", "autumn", "winter"] as const;
+
+/**
+ * A packed bag: a named subset of the wardrobe, for a trip or an occasion.
+ *
+ * Bags are a view over the wardrobe rather than a move — a garment in a bag
+ * is still in the wardrobe, and deleting the bag leaves every garment alone.
+ */
+export const bags = pgTable("bags", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const bagItems = pgTable("bag_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  bagId: uuid("bag_id")
+    .notNull()
+    .references(() => bags.id, { onDelete: "cascade" }),
+  garmentId: uuid("garment_id")
+    .notNull()
+    .references(() => garments.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type Bag = typeof bags.$inferSelect;
+export type BagItem = typeof bagItems.$inferSelect;

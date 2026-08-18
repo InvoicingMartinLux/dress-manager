@@ -2,8 +2,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { and, eq, or } from "drizzle-orm";
-import { ArrowLeft, Sparkles, Shirt, Pencil, Droplets, Heart } from "lucide-react";
-import { db, ensureSchema, favoriteMatches, garments } from "@/lib/db";
+import {
+  ArrowLeft,
+  Sparkles,
+  Shirt,
+  Pencil,
+  Droplets,
+  Heart,
+  Briefcase,
+} from "lucide-react";
+import { bagItems, bags, db, ensureSchema, favoriteMatches, garments } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import {
   countDirtyCandidates,
@@ -11,7 +19,7 @@ import {
   groupByCategory,
   type ScoredMatch,
 } from "@/lib/matching";
-import { imageRoute } from "@/lib/blob";
+import { imageRoute, UUID_PATTERN } from "@/lib/blob";
 import GarmentCard from "@/components/GarmentCard";
 import DeleteGarmentButton from "@/components/DeleteGarmentButton";
 import DirtyToggle from "@/components/DirtyToggle";
@@ -147,12 +155,15 @@ function MatchRow({
 
 export default async function GarmentPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ bag?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
   const { id } = await params;
+  const { bag: bagParam } = await searchParams;
 
   await ensureSchema();
   const wardrobe = await db()
@@ -184,17 +195,39 @@ export default async function GarmentPage({
     pairings.map((p) => (p.garmentAId === id ? p.garmentBId : p.garmentAId))
   );
 
-  const groups = groupByCategory(findMatches(item, wardrobe, favoriteIds));
-  const inLaundry = countDirtyCandidates(item, wardrobe);
+  // Opened from a bag: match only against what was packed alongside it.
+  let bag: { id: string; name: string } | null = null;
+  let candidates = wardrobe;
+  if (bagParam && UUID_PATTERN.test(bagParam)) {
+    const [found] = await db()
+      .select({ id: bags.id, name: bags.name })
+      .from(bags)
+      .where(and(eq(bags.id, bagParam), eq(bags.userId, session.userId)));
+    if (found) {
+      bag = found;
+      const packed = new Set(
+        (
+          await db()
+            .select({ garmentId: bagItems.garmentId })
+            .from(bagItems)
+            .where(eq(bagItems.bagId, found.id))
+        ).map((r) => r.garmentId)
+      );
+      candidates = wardrobe.filter((g) => packed.has(g.id) || g.id === item.id);
+    }
+  }
+
+  const groups = groupByCategory(findMatches(item, candidates, favoriteIds));
+  const inLaundry = countDirtyCandidates(item, candidates);
 
   return (
     <div>
       <Link
-        href="/wardrobe"
+        href={bag ? `/bags/${bag.id}` : "/wardrobe"}
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Back to wardrobe
+        {bag ? `Back to ${bag.name}` : "Back to wardrobe"}
       </Link>
 
       <div className="mt-5 grid gap-10 lg:grid-cols-[340px_1fr] lg:gap-14">
@@ -285,6 +318,18 @@ export default async function GarmentPage({
           <h2 className="text-2xl font-bold tracking-tight">
             What goes with this?
           </h2>
+
+          {bag && (
+            <p className="mt-2 flex items-start gap-2 rounded-card bg-accent-soft p-3 text-sm text-accent">
+              <Briefcase className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              Matching within <strong className="font-semibold">{bag.name}</strong>
+              . Only what you packed in this bag is considered —{" "}
+              <Link href={`/wardrobe/${item.id}`} className="underline">
+                match against the whole wardrobe
+              </Link>
+              .
+            </p>
+          )}
 
           {inLaundry > 0 && (
             <p className="mt-2 text-sm text-ink-faint">
