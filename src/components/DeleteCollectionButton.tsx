@@ -4,35 +4,34 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 
-export default function DeleteBagButton({
-  bagId,
-  name,
+/** Deletes a bag or a pack list. Garments are never touched. */
+export default function DeleteCollectionButton({
+  endpoint,
+  redirectTo,
+  confirmText,
+  label = "Delete",
 }: {
-  bagId: string;
-  name: string;
+  endpoint: string;
+  redirectTo: string;
+  confirmText: string;
+  label?: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function remove() {
-    if (
-      !confirm(
-        `Remove the bag "${name}"?\n\nThe clothes in it stay in your wardrobe — only the bag goes.`
-      )
-    ) {
-      return;
-    }
+    if (!confirm(confirmText)) return;
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/bags/${bagId}`, { method: "DELETE" });
+      const res = await fetch(endpoint, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError(data.error ?? "Could not remove the bag.");
+        setError(data.error ?? "Could not remove this.");
         return;
       }
-      router.push("/bags");
+      router.push(redirectTo);
       router.refresh();
     } catch {
       setError("Could not reach the server.");
@@ -49,7 +48,7 @@ export default function DeleteBagButton({
         className="inline-flex items-center gap-1.5 rounded-card border border-line px-3 py-1.5 text-sm text-ink-muted transition-colors hover:border-danger hover:text-danger disabled:opacity-50"
       >
         <Trash2 className="h-4 w-4" aria-hidden="true" />
-        {busy ? "Removing…" : "Remove bag"}
+        {busy ? "Removing…" : label}
       </button>
       {error && <p className="mt-1 text-sm text-danger">{error}</p>}
     </div>

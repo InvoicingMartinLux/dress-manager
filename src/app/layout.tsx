@@ -31,16 +31,17 @@ export default async function RootLayout({
             <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-6 py-3">
               <Link href="/" className="flex items-center gap-2.5">
                 <Logo className="h-8 w-8" />
-                <span className="label-caps text-[0.8125rem] tracking-[0.18em] text-ink">
+                <span className="label-caps hidden text-[0.8125rem] tracking-[0.18em] text-ink sm:inline">
                   Dress Manager
                 </span>
               </Link>
 
-              <nav className="flex items-center gap-5">
+              <nav className="flex flex-wrap items-center justify-end gap-3 sm:gap-5">
                 {session ? (
                   <>
                     <NavLink href="/wardrobe">Wardrobe</NavLink>
                     <NavLink href="/bags">Bags</NavLink>
+                    <NavLink href="/pack-lists">Pack lists</NavLink>
                     <Link
                       href="/wardrobe/new"
                       className="btn btn-primary px-4 py-2 text-sm"
